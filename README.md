@@ -1,1 +1,1 @@
-# MAPA-
+Esse repositório foi feito com o objetivo de organizar os códigos utilizados no desenvolvimento da aplicação do sistema web MAPA. Tal sistema tem como princípio o agendamento e frequência dos pacientes da clínica integrada Vitta Prime, concedente a qual realizei um estágio supervisionado no ano de 2025.
