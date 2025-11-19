@@ -36,3 +36,10 @@ CREATE TABLE usuario (
     codigo2etapas VARCHAR(10), 
     tipo_usuario VARCHAR(20)
 ) DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE frequencia (
+    ID INT PRIMARY KEY AUTO_INCREMENT, 
+    FOREIGN KEY (ID_paciente) REFERENCES paciente(ID_paciente),
+    FOREIGN KEY (ID_consulta) REFERENCES paciente(ID_consulta),
+    data_consulta DATE
+)
