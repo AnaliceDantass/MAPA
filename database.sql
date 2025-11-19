@@ -38,8 +38,10 @@ CREATE TABLE usuario (
 ) DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 CREATE TABLE frequencia (
-    ID INT PRIMARY KEY AUTO_INCREMENT, 
-    FOREIGN KEY (ID_paciente) REFERENCES paciente(ID_paciente),
-    FOREIGN KEY (ID_consulta) REFERENCES paciente(ID_consulta),
-    data_consulta DATE
-)
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    ID_consulta INT NOT NULL,
+    data_consulta DATE NOT NULL,
+    status_frequencia ENUM('Agendada', 'Compareceu', 'Faltou') DEFAULT 'Agendada',
+    FOREIGN KEY (ID_consulta) REFERENCES consultas(ID)
+) DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
