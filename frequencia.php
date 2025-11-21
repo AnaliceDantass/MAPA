@@ -2,13 +2,11 @@
 session_start();
 require_once 'conexaobd.php';
 
-// Verifica se o usuário é Admin
 if (!isset($_SESSION['logado']) || $_SESSION['tipo'] !== 'Admin') {
     header('Location: index.php');
     exit;
 }
 
-// Consulta SQL corrigida
 $sql = "SELECT 
             f.ID_frequencia, 
             p.nome_paciente, 
