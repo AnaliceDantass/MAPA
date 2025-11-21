@@ -1,3 +1,7 @@
 *.sql linguist-detectable=true
 *.sql linguist-language=SQL
 *.sql text
+*.php linguist-language=PHP
+*.sql linguist-detectable=true
+*.sql linguist-language=SQL
+*.css linguist-language=CSS
