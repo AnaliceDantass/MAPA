@@ -3,13 +3,14 @@ session_start();
 
 if ($_POST) {
     if (!hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'] ?? '')) {
-        header("Location: cadastro.php?erro=csrf_invalido");
+        header("Location: cadastrar.php?erro=csrf_invalido");
         exit;
     }
 
-    $nome_usuario = trim($_POST['nome_usuario'] ?? '');
-    $email_usuario = trim($_POST['email_usuario'] ?? '');
-    $senha_usuario = $_POST['senha_usuario'] ?? '';
+    $ID_paciente = trim($_POST['ID_paciente'] ?? '');
+    $nome_paciente = trim($_POST['nome_paciente'] ?? '');
+    $telefone_paciente = trim($_POST['telefone_paciente'] ?? '');    $senha_paciente = $_POST['senha_paciente'] ?? '';
+    
 
     if (empty($nome_usuario) || empty($email_usuario) || empty($senha_usuario)) {
         header("Location: cadastro.php?erro=campos_vazios");
