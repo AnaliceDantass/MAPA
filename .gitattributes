@@ -3,5 +3,5 @@
 *.sql text
 *.php linguist-language=PHP
 *.sql linguist-detectable=true
-*.sql linguist-language=SQL
+*.sql linguist-language=HTML
 *.css linguist-language=CSS
