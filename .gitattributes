@@ -1,3 +1,7 @@
+git add .gitattributes
+git commit -m "Fix linguist: force HTML/CSS/SQL detection"
+git push
+
 *.php linguist-language=PHP
 *.html linguist-language=HTML
 *.css linguist-language=CSS
