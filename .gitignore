@@ -1,0 +1,32 @@
+xampp/
+logs/
+error.log
+access.log
+
+*.tmp
+*.log
+*.lock
+
+.env
+config/conexaobd.php
+app/config/*.php
+
+cache/
+sessions/
+
+.vscode/
+.idea/
+*.swp
+*.swo
+
+vendor/
+composer.lock
+
+*.sql
+*.db
+
+Thumbs.db
+Desktop.ini
+
+# PHP
+*.php~  # backups automáticos
