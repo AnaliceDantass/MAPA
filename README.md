@@ -4,4 +4,6 @@ Esse repositório foi feito com o objetivo de organizar os códigos utilizados n
 
 # Funcionalidades 
 
-## Cadastro de pacientes
+- Cadastro de pacientes
+- Agendamento de clientes 
+- Autenticação do usuário
