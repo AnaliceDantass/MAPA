@@ -13,9 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $especialidade = trim($_POST['especialidade'] ?? '');
 
     if ($nome && $crm) {
+        // ✅ Variáveis corretas + sem ID_medico no INSERT
         $stmt = $conexao->prepare("INSERT INTO medico (nome_medico, CRM_medico, especialidade_medico) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $nome_medico, $crm_medico, $especialidade_medico);
-        
+        $stmt->bind_param("sss", $nome, $crm, $especialidade); // ← $nome, $crm, $especialidade
+
         if ($stmt->execute()) {
             $_SESSION['mensagem'] = "✅ Médico cadastrado com sucesso!";
         } else {
