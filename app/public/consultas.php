@@ -3,13 +3,14 @@ session_start();
 require_once 'conexaobd.php';
 
 if (!isset($_SESSION['logado']) || $_SESSION['tipo'] !== 'Admin') {
-    header('Location: index.php');
+    header('Location: agendar.php');
     exit;
 }
 if (!isset($_SESSION['ID_usuario'])) {
     die("<h3>❌ Sessão incompleta</h3><p>Faça login novamente. O sistema não recebeu seu ID.</p>");
 }
 
+// ———————— BUSCAR PACIENTES (usando CPF, igual ao seu FK) ————————
 $stmt_pacientes = $conexao->prepare("
     SELECT CPF_paciente, nome_paciente 
     FROM paciente 
@@ -20,17 +21,19 @@ $stmt_pacientes->bind_param("i", $_SESSION['ID_usuario']);
 $stmt_pacientes->execute();
 $result_pacientes = $stmt_pacientes->get_result();
 
+// ———————— BUSCAR MÉDICOS (obrigatório, pois CRM_medico é FK) ————————
 $stmt_medicos = $conexao->prepare("SELECT CRM_medico, nome_medico FROM medico ORDER BY nome_medico");
 $stmt_medicos->execute();
 $result_medicos = $stmt_medicos->get_result();
 
+// ———————— CADASTRAR CONSULTA ————————
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cpf_paciente = $_POST['cpf_paciente'] ?? null;
     $crm_medico = $_POST['crm_medico'] ?? null;
     $data = trim($_POST['data'] ?? '');
     $horario = trim($_POST['horario'] ?? '');
     $status = $_POST['status'] ?? 'Agendada';
-    $obs = trim($_POST['observacoes'] ?? ''); 
+    $obs = trim($_POST['observacoes'] ?? ''); // obs não está na tabela, então vamos ignorar
 
     if (!$cpf_paciente || !$crm_medico || !$data) {
         $_SESSION['mensagem'] = "❌ Paciente, médico e data são obrigatórios.";
@@ -57,10 +60,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
+// ———————— LISTAR CONSULTAS ————————
 $stmt_consultas = $conexao->prepare("
     SELECT 
-        c.ID,
+        c.ID_consulta,
         p.nome_paciente,
+        p.CPF_paciente,
         m.nome_medico,
         c.data_consulta,
         c.horario,
@@ -99,6 +104,7 @@ $result_consultas = $stmt_consultas->get_result();
         <a href="agendar.php" class="btn btn-outline-secondary">👥 Pacientes</a>
     </div>
 
+    <!-- Formulário -->
     <div class="card mb-4">
         <div class="card-body">
             <form method="post">
@@ -149,6 +155,7 @@ $result_consultas = $stmt_consultas->get_result();
         </div>
     </div>
 
+    <!-- Lista -->
     <h3 class="mb-3">📋 Consultas Agendadas</h3>
     <?php if ($result_consultas->num_rows === 0): ?>
         <div class="alert alert-info">Nenhuma consulta cadastrada ainda.</div>
