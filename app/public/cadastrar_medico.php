@@ -101,7 +101,7 @@ $resultado = $conexao->query("SELECT * FROM medico ORDER BY nome_medico");
                         <tr>
                             <td><?= htmlspecialchars($m['CRM_medico']) ?></td>
                             <td><?= htmlspecialchars($m['nome_medico']) ?></td>
-                            <td><?= htmlspecialchars($m['especialidade']) ?></td>
+                            <td><?= htmlspecialchars($m['especialidade_medico']) ?></td>
                         </tr>
                     <?php endwhile; ?>
                 </tbody>
