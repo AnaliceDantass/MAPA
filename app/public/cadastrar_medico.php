@@ -34,6 +34,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// ✅ Remover médico (protegido por POST e token)
+if (isset($_POST['remover_medico']) && isset($_POST['token'])) {
+    // Validação básica de token (evita CSRF simples)
+    if (!isset($_SESSION['token']) || $_POST['token'] !== $_SESSION['token']) {
+        $_SESSION['mensagem'] = "❌ Acesso não autorizado.";
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $id_medico = (int) $_POST['remover_medico'];
+
+    // Verifica se o médico existe (opcional, mas bom pra UX)
+    $check = $conexao->prepare("SELECT nome_medico FROM medico WHERE ID_medico = ?");
+    $check->bind_param("i", $id_medico);
+    $check->execute();
+    $medico = $check->get_result()->fetch_assoc();
+
+    if ($medico) {
+        $stmt = $conexao->prepare("DELETE FROM medico WHERE ID_medico = ?");
+        $stmt->bind_param("i", $id_medico);
+        
+        if ($stmt->execute()) {
+            $_SESSION['mensagem'] = "✅ Médico " . htmlspecialchars($medico['nome_medico']) . " removido com sucesso!";
+        } else {
+            $_SESSION['mensagem'] = "❌ Erro ao remover médico: " . htmlspecialchars($stmt->error);
+        }
+        $stmt->close();
+    } else {
+        $_SESSION['mensagem'] = "❌ Médico não encontrado.";
+    }
+
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit;
+}
+
+// Gera token de segurança para formulários (uma vez por sessão)
+if (!isset($_SESSION['token'])) {
+    $_SESSION['token'] = bin2hex(random_bytes(16));
+}
+
 $resultado = $conexao->query("SELECT * FROM medico ORDER BY nome_medico");
 ?>
 
@@ -83,6 +123,7 @@ $resultado = $conexao->query("SELECT * FROM medico ORDER BY nome_medico");
         </div>
     </div>
 
+<!-- Lista -->
 <h3 class="mb-3">📋 Médicos Cadastrados</h3>
 <?php if ($resultado->num_rows === 0): ?>
     <div class="alert alert-info">Nenhum médico cadastrado ainda.</div>
@@ -111,6 +152,7 @@ $resultado = $conexao->query("SELECT * FROM medico ORDER BY nome_medico");
                                 🗑️ Remover
                             </button>
 
+                            <!-- Modal de Confirmação -->
                             <div class="modal fade" id="modalRemover<?= $m['ID_medico'] ?>" tabindex="-1">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
