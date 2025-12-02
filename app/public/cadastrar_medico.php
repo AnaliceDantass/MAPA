@@ -83,33 +83,69 @@ $resultado = $conexao->query("SELECT * FROM medico ORDER BY nome_medico");
         </div>
     </div>
 
-    <!-- Lista -->
-    <h3 class="mb-3">📋 Médicos Cadastrados</h3>
-    <?php if ($resultado->num_rows === 0): ?>
-        <div class="alert alert-info">Nenhum médico cadastrado ainda.</div>
-    <?php else: ?>
-        <div class="table-responsive">
-            <table class="table table-hover table-bordered">
-                <thead class="table-light">
+<h3 class="mb-3">📋 Médicos Cadastrados</h3>
+<?php if ($resultado->num_rows === 0): ?>
+    <div class="alert alert-info">Nenhum médico cadastrado ainda.</div>
+<?php else: ?>
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>CRM</th>
+                    <th>Nome</th>
+                    <th>Especialidade</th>
+                    <th class="text-center">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php while ($m = $resultado->fetch_assoc()): ?>
                     <tr>
-                        <th>CRM</th>
-                        <th>Nome</th>
-                        <th>Especialidade</th>
+                        <td><?= htmlspecialchars($m['CRM_medico']) ?></td>
+                        <td><?= htmlspecialchars($m['nome_medico']) ?></td>
+                        <td><?= htmlspecialchars($m['especialidade_medico']) ?></td>
+                        <td class="text-center">
+                            <!-- Botão Remover -->
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalRemover<?= $m['ID_medico'] ?>">
+                                🗑️ Remover
+                            </button>
+
+                            <div class="modal fade" id="modalRemover<?= $m['ID_medico'] ?>" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-danger text-white">
+                                            <h5 class="modal-title">⚠️ Confirmar Exclusão</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Tem certeza que deseja remover o médico abaixo?</p>
+                                            <ul class="list-unstyled bg-light p-3 rounded">
+                                                <li><strong>Nome:</strong> <?= htmlspecialchars($m['nome_medico']) ?></li>
+                                                <li><strong>CRM:</strong> <?= htmlspecialchars($m['CRM_medico']) ?></li>
+                                            </ul>
+                                            <p class="text-danger fw-bold">
+                                                ⚠️ Esta ação é <u>irreversível</u>.
+                                            </p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <form method="post" style="display:inline;">
+                                                <input type="hidden" name="remover_medico" value="<?= $m['ID_medico'] ?>">
+                                                <input type="hidden" name="token" value="<?= $_SESSION['token'] ?? bin2hex(random_bytes(16)) ?>">
+                                                <button type="submit" class="btn btn-danger">Remover</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    <?php while ($m = $resultado->fetch_assoc()): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($m['CRM_medico']) ?></td>
-                            <td><?= htmlspecialchars($m['nome_medico']) ?></td>
-                            <td><?= htmlspecialchars($m['especialidade_medico']) ?></td>
-                        </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
-        </div>
-    <?php endif; ?>
-</div>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
+<?php endif; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
