@@ -3,77 +3,116 @@ session_start();
 require_once 'conexaobd.php';
 
 if (!isset($_SESSION['logado']) || $_SESSION['tipo'] !== 'Admin') {
-    header('Location: index.php');
+    header('Location: ../index.php');
     exit;
 }
 
-$sql = "SELECT 
-            f.ID_frequencia, 
-            p.nome_paciente, 
-            c.data_consulta, 
-            c.status_consulta
-        FROM frequencia f
-        JOIN paciente p ON f.ID_paciente = p.ID_paciente
-        JOIN consultas c ON f.ID_consulta = c.ID_consulta
-        ORDER BY p.nome_paciente ASC, c.data_consulta DESC";
+$sql = "
+    SELECT 
+        p.ID_paciente,
+        p.nome_paciente,
+        COUNT(c.ID_consulta) AS total_sessoes,
+        SUM(CASE WHEN c.status_consulta = 'Realizada' THEN 1 ELSE 0 END) AS sessoes_realizadas,
+        MIN(CASE WHEN c.status_consulta = 'Agendada' THEN c.data_consulta END) AS proxima_sessao
+    FROM paciente p
+    LEFT JOIN consultas c ON p.CPF_paciente = c.CPF_cliente
+    WHERE p.ID_usuario = ?
+    GROUP BY p.ID_paciente, p.nome_paciente
+    ORDER BY p.nome_paciente ASC
+";
 
-$result = $conexao->query($sql);
+$stmt = $conexao->prepare($sql);
+$stmt->bind_param("i", $_SESSION['ID_usuario']);
+$stmt->execute();
+$result = $stmt->get_result();
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Frequência dos Pacientes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Frequência dos Pacientes</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {
-            padding: 30px;
-            font-family: Arial, sans-serif;
-        }
-        table {
-            border-collapse: collapse;
-            width: 90%;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px 10px;
-            text-align: left;
-        }
-        th {
-            background-color: #eee;
-        }
-        .Agendada { background-color: #fff3cd; }   /* amarelo */
-        .Realizada { background-color: #d4edda; }  /* verde */
-        .Cancelada { background-color: #f8d7da; }  /* vermelho */
+        body { padding: 20px; background-color: #f8f9fa; }
+        .card-header { font-weight: bold; }
+        .progress { height: 8px; }
+        .progress-bar { font-size: 0.75rem; }
+        .text-realizada { color: #198754; font-weight: bold; }
+        .text-agendada { color: #ffc107; font-weight: bold; }
+        .text-pendente { color: #6c757d; }
     </style>
 </head>
 <body>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📊 Frequência dos Pacientes</h2>
+        <a href="agendar.php" class="btn btn-outline-secondary">◀️ Voltar</a>
+    </div>
 
-<h2>Frequência dos Pacientes</h2>
+    <?php if ($result->num_rows === 0): ?>
+        <div class="alert alert-info">
+            Nenhum paciente com sessões cadastradas ainda.<br>
+            <small>Agende consultas em <a href="consultas.php">📅 Consultas</a> para ver a frequência aqui.</small>
+        </div>
+    <?php else: ?>
+        <div class="row g-3">
+            <?php while ($p = $result->fetch_assoc()): 
+                $total = (int)$p['total_sessoes'];
+                $realizadas = (int)$p['sessoes_realizadas'];
+                $faltam = max(0, $total - $realizadas);
+                $progresso = $total > 0 ? round(($realizadas / $total) * 100) : 0;
+            ?>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-primary text-white">
+                            <?= htmlspecialchars($p['nome_paciente']) ?>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-1">
+                                <span class="text-realizada">✅ Realizadas:</span> <strong><?= $realizadas ?></strong>
+                            </p>
+                            <p class="mb-1">
+                                <span class="text-agendada">📅 Agendadas:</span> <strong><?= $faltam ?></strong>
+                            </p>
+                            <p class="mb-2">
+                                <span class="fw-bold">Total:</span> <strong><?= $total ?></strong> sessões
+                            </p>
 
-<table class="table">
-    <tr>
-        <th>ID</th>
-        <th>Paciente</th>
-        <th>Data</th>
-        <th>Status</th>
-    </tr>
+                            <?php if ($total > 0): ?>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar bg-success" style="width: <?= $progresso ?>%">
+                                        <?= $progresso ?>%
+                                    </div>
+                                </div>
+                            <?php endif; ?>
 
-    <?php while($row = $result->fetch_assoc()): 
-        $status = $row['status_consulta']; 
-    ?>
-        <tr class="<?= $status ?>">
-            <td><?= htmlspecialchars($row['ID_frequencia']) ?></td>
-            <td><?= htmlspecialchars($row['nome_paciente']) ?></td>
-            <td><?= date('d/m/Y', strtotime($row['data_consulta'])) ?></td>
-            <td><?= htmlspecialchars($status) ?></td>
-        </tr>
-    <?php endwhile; ?>
-</table>
+                            <?php if ($p['proxima_sessao']): ?>
+                                <p class="mb-0">
+                                    <span class="text-agendada">➡️ Próxima:</span> 
+                                    <strong><?= date('d/m/Y', strtotime($p['proxima_sessao'])) ?></strong>
+                                </p>
+                            <?php else: ?>
+                                <p class="mb-0 text-pendente">➡️ Sem sessões agendadas</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php endwhile; ?>
+        </div>
+    <?php endif; ?>
 
-<a href="agendar.php" class="btn btn-primary mt-3">Voltar ao Painel</a>
+    <div class="mt-4 p-3 bg-light rounded">
+        <h5>💡 Como funciona?</h5>
+        <ul>
+            <li>A frequência é calculada com base nas <strong>consultas</strong> do paciente.</li>
+            <li>Mude o status da consulta para <strong>Realizada</strong> em <a href="consultas.php">📅 Consultas</a> para atualizar aqui.</li>
+            <li>Não é necessário cadastrar "frequência" manualmente.</li>
+        </ul>
+    </div>
+</div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
