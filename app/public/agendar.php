@@ -93,7 +93,10 @@ $resultado = $stmt_sel->get_result();
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>📋 Painel de Agendamento</h2>
-        <a href="frequencia.php" class="btn btn-outline-primary">📊 Frequência</a>
+        <a href="frequencia.php" class="btn btn-outline-success">📊 Frequência</a>
+        <a href="consultas.php" class="btn btn-outline-success">📅 Consultas</a>
+        <a href="cadastrar_medico.php" class="btn btn-outline-success">🧑‍⚕️ Médicos</a>
+
     </div>
 
     <div class="form-paciente mb-4">
