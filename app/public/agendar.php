@@ -7,15 +7,25 @@ if (!isset($_SESSION['logado']) || $_SESSION['tipo'] !== 'Admin') {
     exit;
 }
 
-if (isset($_POST['remover_id']) && is_numeric($_POST['remover_id'])) {
-    $id_paciente = (int)$_POST['remover_id'];
+if (!isset($_SESSION['token'])) {
+    $_SESSION['token'] = bin2hex(random_bytes(16));
+}
+
+if (isset($_POST['remover_paciente']) && isset($_POST['token'])) {
+    if (!isset($_SESSION['token']) || $_POST['token'] !== $_SESSION['token']) {
+        $_SESSION['mensagem'] = "❌ Acesso não autorizado.";
+        header("Location: " . $_SERVER['PHP_SELF']);
+        exit;
+    }
+
+    $cpf_paciente = $_POST['remover_paciente'];
 
     $stmt_check = $conexao->prepare("
         SELECT ID_paciente, nome_paciente 
         FROM paciente 
-        WHERE ID_paciente = ? AND ID_usuario = ?
+        WHERE CPF_paciente = ? AND ID_usuario = ?
     ");
-    $stmt_check->bind_param("ii", $id_paciente, $_SESSION['ID_usuario']);
+    $stmt_check->bind_param("si", $cpf_paciente, $_SESSION['ID_usuario']);
     $stmt_check->execute();
     $paciente = $stmt_check->get_result()->fetch_assoc();
     $stmt_check->close();
@@ -24,17 +34,17 @@ if (isset($_POST['remover_id']) && is_numeric($_POST['remover_id'])) {
         $stmt_del_consultas = $conexao->prepare("
             DELETE c FROM consultas c
             INNER JOIN paciente p ON c.CPF_cliente = p.CPF_paciente
-            WHERE p.ID_paciente = ? AND p.ID_usuario = ?
+            WHERE p.CPF_paciente = ? AND p.ID_usuario = ?
         ");
-        $stmt_del_consultas->bind_param("ii", $id_paciente, $_SESSION['ID_usuario']);
+        $stmt_del_consultas->bind_param("si", $cpf_paciente, $_SESSION['ID_usuario']);
         $stmt_del_consultas->execute();
         $consultas_removidas = $stmt_del_consultas->affected_rows;
         $stmt_del_consultas->close();
 
-        $stmt_del_paciente = $conexao->prepare("DELETE FROM paciente WHERE ID_paciente = ?");
-        $stmt_del_paciente->bind_param("i", $id_paciente);
-        $stmt_del_paciente->execute();
-        $stmt_del_paciente->close();
+        $stmt_del = $conexao->prepare("DELETE FROM paciente WHERE CPF_paciente = ?");
+        $stmt_del->bind_param("s", $cpf_paciente);
+        $stmt_del->execute();
+        $stmt_del->close();
 
         $msg = "✅ Paciente <strong>" . htmlspecialchars($paciente['nome_paciente']) . "</strong> removido";
         if ($consultas_removidas > 0) {
@@ -43,14 +53,14 @@ if (isset($_POST['remover_id']) && is_numeric($_POST['remover_id'])) {
         $msg .= " com sucesso!";
         $_SESSION['mensagem'] = $msg;
     } else {
-        $_SESSION['mensagem'] = "❌ Erro: Paciente não encontrado ou acesso não autorizado.";
+        $_SESSION['mensagem'] = "❌ Paciente não encontrado ou acesso negado.";
     }
 
     header("Location: " . $_SERVER['PHP_SELF']);
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['remover_id'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['remover_paciente'])) {
     $nome = trim($_POST['nome'] ?? '');
     $telefone = trim($_POST['telefone'] ?? '');
     $endereco = trim($_POST['endereco'] ?? '');
@@ -74,9 +84,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['remover_id'])) {
         $_SESSION['mensagem'] = "✅ Paciente cadastrado com sucesso!";
     } else {
         if ($stmt->errno == 1062 && strpos($stmt->error, 'CPF_paciente') !== false) {
-            $_SESSION['mensagem'] = "⚠️ CPF já cadastrado! Verifique se o paciente já existe.";
+            $_SESSION['mensagem'] = "⚠️ CPF já cadastrado!";
         } else {
-            $_SESSION['mensagem'] = "❌ Erro ao cadastrar: " . htmlspecialchars($stmt->error);
+            $_SESSION['mensagem'] = "❌ Erro: " . htmlspecialchars($stmt->error);
         }
     }
     $stmt->close();
@@ -100,6 +110,7 @@ $resultado = $stmt_sel->get_result();
     <style>
         body { padding: 20px; background-color: #f8f9fa; }
         .form-paciente { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .modal-header.bg-danger { color: white; }
     </style>
 </head>
 <body>
@@ -153,32 +164,57 @@ $resultado = $stmt_sel->get_result();
             <table class="table table-hover table-bordered">
                 <thead class="table-light">
                     <tr>
-                        <th>ID</th>
+                        <th>CPF</th>
                         <th>Nome</th>
                         <th>Telefone</th>
                         <th>Endereço</th>
-                        <th>CPF</th>
                         <th class="text-center">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php while ($p = $resultado->fetch_assoc()): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($p['ID_paciente']) ?></td>
-                            <td><?= htmlspecialchars($p['nome_paciente']) ?></td>
-                            <td><?= htmlspecialchars($p['telefone_paciente']) ?></td>
-                            <td><?= htmlspecialchars($p['endereco_paciente']) ?></td>
-                            <td><?= htmlspecialchars($p['CPF_paciente']) ?></td>
-                            <td class="text-center">
-                                <form method="post" style="display:inline;" 
-                                      onsubmit="return confirm('⚠️ Deseja remover este paciente?\\nTodas as consultas dele também serão excluídas.')">
-                                    <input type="hidden" name="remover_id" value="<?= $p['ID_paciente'] ?>">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        🗑️ Remover
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
+                    <tr>
+                        <td><?= htmlspecialchars($p['CPF_paciente']) ?></td>
+                        <td><?= htmlspecialchars($p['nome_paciente']) ?></td>
+                        <td><?= htmlspecialchars($p['telefone_paciente']) ?></td>
+                        <td><?= htmlspecialchars($p['endereco_paciente']) ?></td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalRemover<?= htmlspecialchars($p['CPF_paciente']) ?>">
+                                🗑️ Remover
+                            </button>
+
+                            <div class="modal fade" id="modalRemover<?= htmlspecialchars($p['CPF_paciente']) ?>" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-danger text-white">
+                                            <h5 class="modal-title">⚠️ Confirmar Exclusão</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Tem certeza que deseja remover o paciente abaixo?</p>
+                                            <ul class="list-unstyled bg-light p-3 rounded">
+                                                <li><strong>Nome:</strong> <?= htmlspecialchars($p['nome_paciente']) ?></li>
+                                                <li><strong>CPF:</strong> <?= htmlspecialchars($p['CPF_paciente']) ?></li>
+                                            </ul>
+                                            <p class="text-danger fw-bold">
+                                                ⚠️ Esta ação é <u>irreversível</u> e removerá também todas as consultas associadas.
+                                            </p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <form method="post" style="display:inline;">
+                                                <input type="hidden" name="remover_paciente" value="<?= htmlspecialchars($p['CPF_paciente']) ?>">
+                                                <input type="hidden" name="token" value="<?= $_SESSION['token'] ?>">
+                                                <button type="submit" class="btn btn-danger">Remover</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
                     <?php endwhile; ?>
                 </tbody>
             </table>
