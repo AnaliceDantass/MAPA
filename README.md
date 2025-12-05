@@ -4,8 +4,8 @@ Esse repositório foi feito com o objetivo de organizar os códigos utilizados n
 
 # Funcionalidades 
 
-- Autenticação do usuário
+- Autenticação do usuário Admin
 - Cadastro de pacientes
 - Agendamento de consultas
-- Verificação da frequência de pacientes
-- Cadastro de médicos
+- Verificação da frequência dos pacientes
+- Cadastro de profissionais de saúde
