@@ -13,9 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $especialidade = trim($_POST['especialidade'] ?? '');
 
     if ($nome && $crm) {
-        // ✅ Variáveis corretas + sem ID_medico no INSERT
         $stmt = $conexao->prepare("INSERT INTO medico (nome_medico, CRM_medico, especialidade_medico) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $nome, $crm, $especialidade); // ← $nome, $crm, $especialidade
+        $stmt->bind_param("sss", $nome, $crm, $especialidade);
 
         if ($stmt->execute()) {
             $_SESSION['mensagem'] = "✅ Médico cadastrado com sucesso!";
@@ -34,9 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// ✅ Remover médico (protegido por POST e token)
 if (isset($_POST['remover_medico']) && isset($_POST['token'])) {
-    // Validação básica de token (evita CSRF simples)
     if (!isset($_SESSION['token']) || $_POST['token'] !== $_SESSION['token']) {
         $_SESSION['mensagem'] = "❌ Acesso não autorizado.";
         header("Location: " . $_SERVER['PHP_SELF']);
@@ -45,7 +42,6 @@ if (isset($_POST['remover_medico']) && isset($_POST['token'])) {
 
     $id_medico = (int) $_POST['remover_medico'];
 
-    // Verifica se o médico existe (opcional, mas bom pra UX)
     $check = $conexao->prepare("SELECT nome_medico FROM medico WHERE ID_medico = ?");
     $check->bind_param("i", $id_medico);
     $check->execute();
@@ -69,7 +65,6 @@ if (isset($_POST['remover_medico']) && isset($_POST['token'])) {
     exit;
 }
 
-// Gera token de segurança para formulários (uma vez por sessão)
 if (!isset($_SESSION['token'])) {
     $_SESSION['token'] = bin2hex(random_bytes(16));
 }
@@ -101,7 +96,6 @@ $resultado = $conexao->query("SELECT * FROM medico ORDER BY nome_medico");
         <a href="agendar.php" class="btn btn-outline-secondary">◀️ Voltar</a>
     </div>
 
-    <!-- Formulário -->
     <div class="card mb-4">
         <div class="card-body">
             <form method="post">
@@ -123,7 +117,6 @@ $resultado = $conexao->query("SELECT * FROM medico ORDER BY nome_medico");
         </div>
     </div>
 
-<!-- Lista -->
 <h3 class="mb-3">📋 Médicos Cadastrados</h3>
 <?php if ($resultado->num_rows === 0): ?>
     <div class="alert alert-info">Nenhum médico cadastrado ainda.</div>
@@ -145,14 +138,12 @@ $resultado = $conexao->query("SELECT * FROM medico ORDER BY nome_medico");
                         <td><?= htmlspecialchars($m['nome_medico']) ?></td>
                         <td><?= htmlspecialchars($m['especialidade_medico']) ?></td>
                         <td class="text-center">
-                            <!-- Botão Remover -->
                             <button type="button" class="btn btn-sm btn-outline-danger"
                                 data-bs-toggle="modal"
                                 data-bs-target="#modalRemover<?= $m['ID_medico'] ?>">
                                 🗑️ Remover
                             </button>
 
-                            <!-- Modal de Confirmação -->
                             <div class="modal fade" id="modalRemover<?= $m['ID_medico'] ?>" tabindex="-1">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
