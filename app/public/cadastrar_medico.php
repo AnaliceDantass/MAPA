@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($nome && $crm) {
         $stmt = $conexao->prepare("INSERT INTO medico (nome_medico, CRM_medico, especialidade_medico) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $nome, $crm, $especialidade);
+        $stmt->bind_param("sss", $nome, $crm, $especialidade); 
 
         if ($stmt->execute()) {
             $_SESSION['mensagem'] = "✅ Médico cadastrado com sucesso!";
