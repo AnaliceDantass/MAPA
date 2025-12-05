@@ -3,7 +3,7 @@ session_start();
 require_once 'conexaobd.php';
 
 if (!isset($_SESSION['logado']) || $_SESSION['tipo'] !== 'Admin') {
-    header('Location: agendar.php');
+    header('Location: ../index.php'); 
     exit;
 }
 if (!isset($_SESSION['ID_usuario'])) {
@@ -30,7 +30,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = trim($_POST['data'] ?? '');
     $horario = trim($_POST['horario'] ?? '');
     $status = $_POST['status'] ?? 'Agendada';
-    $obs = trim($_POST['observacoes'] ?? ''); 
 
     if (!$cpf_paciente || !$crm_medico || !$data) {
         $_SESSION['mensagem'] = "❌ Paciente, médico e data são obrigatórios.";
@@ -40,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['mensagem'] = "❌ Data inválida. Use o calendário.";
         } else {
             $stmt = $conexao->prepare("
-                INSERT INTO consultas (CPF_paciente, CRM_medico, data_consulta, horario, status_consulta)
+                INSERT INTO consultas (CPF_cliente, CRM_medico, data_consulta, horario, status_consulta)
                 VALUES (?, ?, ?, ?, ?)
             ");
             $stmt->bind_param("sssss", $cpf_paciente, $crm_medico, $data, $horario, $status);
@@ -59,15 +58,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $stmt_consultas = $conexao->prepare("
     SELECT 
-        c.ID_consulta,
+        c.ID_consulta AS ID,
         p.nome_paciente,
-        p.CPF_paciente,
         m.nome_medico,
         c.data_consulta,
         c.horario,
         c.status_consulta
     FROM consultas c
-    INNER JOIN paciente p ON c.CPF_paciente = p.CPF_paciente
+    INNER JOIN paciente p ON c.CPF_cliente = p.CPF_paciente   -- ✅ CERTO!
     INNER JOIN medico m ON c.CRM_medico = m.CRM_medico
     WHERE p.ID_usuario = ?
     ORDER BY c.data_consulta DESC, c.horario DESC
@@ -83,7 +81,9 @@ $result_consultas = $stmt_consultas->get_result();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agendar Consultas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style> body { padding: 20px; background-color: #f8f9fa; } </style>
+    <style> 
+        body { padding: 20px; background-color: #f8f9fa; }
+    </style>
 </head>
 <body>
 <div class="container">
@@ -97,7 +97,7 @@ $result_consultas = $stmt_consultas->get_result();
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>📅 Agendar Consulta</h2>
-        <a href="agendar.php" class="btn btn-outline-secondary">👥 Pacientes</a>
+        <a href="agendar.php" class="btn btn-outline-secondary">◀️ Voltar</a>
     </div>
 
     <div class="card mb-4">
