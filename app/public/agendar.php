@@ -3,28 +3,49 @@ session_start();
 require_once 'conexaobd.php';
 
 if (!isset($_SESSION['logado']) || $_SESSION['tipo'] !== 'Admin') {
-    header('Location: index.php');
+    header('Location: ../index.php');
     exit;
 }
 
 if (isset($_POST['remover_id']) && is_numeric($_POST['remover_id'])) {
-    $id_paciente = (int) $_POST['remover_id'];
+    $id_paciente = (int)$_POST['remover_id'];
 
-    $stmt_check = $conexao->prepare("SELECT ID_paciente FROM paciente WHERE ID_paciente = ? AND ID_usuario = ?");
+    $stmt_check = $conexao->prepare("
+        SELECT ID_paciente, nome_paciente 
+        FROM paciente 
+        WHERE ID_paciente = ? AND ID_usuario = ?
+    ");
     $stmt_check->bind_param("ii", $id_paciente, $_SESSION['ID_usuario']);
     $stmt_check->execute();
-    $existe = $stmt_check->get_result()->num_rows > 0;
+    $paciente = $stmt_check->get_result()->fetch_assoc();
     $stmt_check->close();
 
-    if ($existe) {
-        $stmt_del = $conexao->prepare("DELETE FROM paciente WHERE ID_paciente = ?");
-        $stmt_del->bind_param("i", $id_paciente);
-        $stmt_del->execute();
-        $stmt_del->close();
-        $_SESSION['mensagem'] = "✅ Paciente removido com sucesso!";
+    if ($paciente) {
+        $stmt_del_consultas = $conexao->prepare("
+            DELETE c FROM consultas c
+            INNER JOIN paciente p ON c.CPF_cliente = p.CPF_paciente
+            WHERE p.ID_paciente = ? AND p.ID_usuario = ?
+        ");
+        $stmt_del_consultas->bind_param("ii", $id_paciente, $_SESSION['ID_usuario']);
+        $stmt_del_consultas->execute();
+        $consultas_removidas = $stmt_del_consultas->affected_rows;
+        $stmt_del_consultas->close();
+
+        $stmt_del_paciente = $conexao->prepare("DELETE FROM paciente WHERE ID_paciente = ?");
+        $stmt_del_paciente->bind_param("i", $id_paciente);
+        $stmt_del_paciente->execute();
+        $stmt_del_paciente->close();
+
+        $msg = "✅ Paciente <strong>" . htmlspecialchars($paciente['nome_paciente']) . "</strong> removido";
+        if ($consultas_removidas > 0) {
+            $msg .= " e suas $consultas_removidas consulta(s)";
+        }
+        $msg .= " com sucesso!";
+        $_SESSION['mensagem'] = $msg;
     } else {
-        $_SESSION['mensagem'] = "❌ Erro: Paciente não encontrado ou não autorizado.";
+        $_SESSION['mensagem'] = "❌ Erro: Paciente não encontrado ou acesso não autorizado.";
     }
+
     header("Location: " . $_SERVER['PHP_SELF']);
     exit;
 }
@@ -63,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['remover_id'])) {
     exit;
 }
 
-$stmt_sel = $conexao->prepare("SELECT * FROM paciente WHERE ID_usuario = ? ORDER BY ID_paciente DESC");
+$stmt_sel = $conexao->prepare("SELECT * FROM paciente WHERE ID_usuario = ? ORDER BY nome_paciente ASC");
 $stmt_sel->bind_param("i", $_SESSION['ID_usuario']);
 $stmt_sel->execute();
 $resultado = $stmt_sel->get_result();
@@ -84,8 +105,11 @@ $resultado = $stmt_sel->get_result();
 <body>
 <div class="container">
     <?php if (isset($_SESSION['mensagem'])): ?>
-        <div class="alert alert-<?= strpos($_SESSION['mensagem'], '❌') !== false ? 'danger' : (strpos($_SESSION['mensagem'], '⚠️') !== false ? 'warning' : 'success') ?> alert-dismissible fade show">
-            <?= htmlspecialchars($_SESSION['mensagem']) ?>
+        <div class="alert alert-<?= 
+            strpos($_SESSION['mensagem'], '❌') !== false ? 'danger' : 
+            (strpos($_SESSION['mensagem'], '⚠️') !== false ? 'warning' : 'success') 
+        ?> alert-dismissible fade show">
+            <?= $_SESSION['mensagem'] ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         <?php unset($_SESSION['mensagem']); ?>
@@ -93,10 +117,9 @@ $resultado = $stmt_sel->get_result();
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>📋 Painel de Agendamento</h2>
-        <a href="frequencia.php" class="btn btn-outline-success">📊 Frequência</a>
-        <a href="consultas.php" class="btn btn-outline-success">📅 Consultas</a>
+        <a href="frequencia.php" class="btn btn-outline-primary">📊 Frequência</a>
+        <a href="consultas.php" class="btn btn-outline-primary">📅 Consultas</a>
         <a href="cadastrar_medico.php" class="btn btn-outline-success">🧑‍⚕️ Médicos</a>
-
     </div>
 
     <div class="form-paciente mb-4">
@@ -135,7 +158,7 @@ $resultado = $stmt_sel->get_result();
                         <th>Telefone</th>
                         <th>Endereço</th>
                         <th>CPF</th>
-                        <th>Ações</th>
+                        <th class="text-center">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -146,10 +169,13 @@ $resultado = $stmt_sel->get_result();
                             <td><?= htmlspecialchars($p['telefone_paciente']) ?></td>
                             <td><?= htmlspecialchars($p['endereco_paciente']) ?></td>
                             <td><?= htmlspecialchars($p['CPF_paciente']) ?></td>
-                            <td>
-                                <form method="post" style="display:inline;" onsubmit="return confirm('Remover?')">
+                            <td class="text-center">
+                                <form method="post" style="display:inline;" 
+                                      onsubmit="return confirm('⚠️ Deseja remover este paciente?\\nTodas as consultas dele também serão excluídas.')">
                                     <input type="hidden" name="remover_id" value="<?= $p['ID_paciente'] ?>">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">🗑️</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        🗑️ Remover
+                                    </button>
                                 </form>
                             </td>
                         </tr>
