@@ -206,7 +206,7 @@ $resultado = $stmt_sel->get_result();
                                                 <li><strong>CPF:</strong> <?= htmlspecialchars($p['CPF_paciente'], ENT_QUOTES, 'UTF-8') ?></li>
                                             </ul>
                                             <p class="text-danger fw-bold">
-                                                Esta ação é <u>irreversível</u> e removerá também todas as consultas associadas.
+                                                Esta ação é irreversível e removerá também todas as consultas associadas.
                                             </p>
                                         </div>
                                         <div class="modal-footer">
