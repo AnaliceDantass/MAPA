@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['remover_paciente']))
     $stmt->bind_param("ssssi", $nome, $telefone, $endereco, $cpf_clean, $_SESSION['ID_usuario']);
 
     if ($stmt->execute()) {
-        $_SESSION['mensagem'] = "✅ Paciente cadastrado com sucesso!";
+        $_SESSION['mensagem'] = "Paciente cadastrado com sucesso!";
     } else {
         if ($stmt->errno == 1062 && strpos($stmt->error, 'CPF_paciente') !== false) {
             $_SESSION['mensagem'] = "CPF já cadastrado!";
