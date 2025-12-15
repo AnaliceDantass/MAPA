@@ -47,14 +47,14 @@ $result = $stmt->get_result();
 <body>
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>📊 Frequência dos Pacientes</h2>
+        <h2>Frequência dos Pacientes</h2>
         <a href="agendar.php" class="btn btn-outline-secondary">◀️ Voltar</a>
     </div>
 
     <?php if ($result->num_rows === 0): ?>
         <div class="alert alert-info">
             Nenhum paciente com sessões cadastradas ainda.<br>
-            <small>Agende consultas em <a href="consultas.php">📅 Consultas</a> para ver a frequência aqui.</small>
+            <small>Agende consultas em <a href="consultas.php">Consultas</a> para ver a frequência aqui.</small>
         </div>
     <?php else: ?>
         <div class="row g-3">
@@ -71,10 +71,10 @@ $result = $stmt->get_result();
                         </div>
                         <div class="card-body">
                             <p class="mb-1">
-                                <span class="text-realizada">✅ Realizadas:</span> <strong><?= $realizadas ?></strong>
+                                <span class="text-realizada">Realizadas:</span> <strong><?= $realizadas ?></strong>
                             </p>
                             <p class="mb-1">
-                                <span class="text-agendada">📅 Agendadas:</span> <strong><?= $faltam ?></strong>
+                                <span class="text-agendada">Agendadas:</span> <strong><?= $faltam ?></strong>
                             </p>
                             <p class="mb-2">
                                 <span class="fw-bold">Total:</span> <strong><?= $total ?></strong> sessões
@@ -104,10 +104,10 @@ $result = $stmt->get_result();
     <?php endif; ?>
 
     <div class="mt-4 p-3 bg-light rounded">
-        <h5>💡 Como funciona?</h5>
+        <h5>Como funciona?</h5>
         <ul>
             <li>A frequência é calculada com base nas <strong>consultas</strong> do paciente.</li>
-            <li>Mude o status da consulta para <strong>Realizada</strong> em <a href="consultas.php">📅 Consultas</a> para atualizar aqui.</li>
+            <li>Mude o status da consulta para <strong>Realizada</strong> em <a href="consultas.php">Consultas</a> para atualizar aqui.</li>
             <li>Não é necessário cadastrar "frequência" manualmente.</li>
         </ul>
     </div>
