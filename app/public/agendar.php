@@ -12,7 +12,7 @@ if (!isset($_SESSION['token'])) {
 }
 
 if (isset($_POST['remover_paciente']) && isset($_POST['token'])) {
-    if (!isset($_SESSION['token']) || $_POST['token'] !== $_SESSION['token']) {
+    if (!isset($_SESSION['token']) || !hash_equals($_SESSION['token'], $_POST['token'])) {
         $_SESSION['mensagem'] = "Acesso não autorizado.";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit;
@@ -46,10 +46,11 @@ if (isset($_POST['remover_paciente']) && isset($_POST['token'])) {
         $stmt_del->execute();
         $stmt_del->close();
 
-        $msg = "Paciente <strong>" . htmlspecialchars($paciente['nome_paciente']) . "</strong> removido";
+        $nome = htmlspecialchars($paciente['nome_paciente'], ENT_QUOTES, 'UTF-8');
+        $msg = "Paciente $nome removido";
         if ($consultas_removidas > 0) {
             $msg .= " e suas $consultas_removidas consulta(s)";
-        }
+        }       
         $msg .= " com sucesso!";
         $_SESSION['mensagem'] = $msg;
     } else {
@@ -86,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['remover_paciente']))
         if ($stmt->errno == 1062 && strpos($stmt->error, 'CPF_paciente') !== false) {
             $_SESSION['mensagem'] = "CPF já cadastrado!";
         } else {
-            $_SESSION['mensagem'] = "Erro: " . htmlspecialchars($stmt->error);
+            $_SESSION['mensagem'] = "Erro: " . htmlspecialchars($stmt->error, ENT_QUOTES, 'UTF-8');
         }
     }
     $stmt->close();
@@ -99,7 +100,6 @@ $stmt_sel->bind_param("i", $_SESSION['ID_usuario']);
 $stmt_sel->execute();
 $resultado = $stmt_sel->get_result();
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -115,22 +115,29 @@ $resultado = $stmt_sel->get_result();
 </head>
 <body>
 <div class="container">
-    <?php if (isset($_SESSION['mensagem'])): ?>
-        <div class="alert alert-<?= 
-            strpos($_SESSION['mensagem']) !== false ? 'danger' : 
-            (strpos($_SESSION['mensagem']) !== false ? 'warning' : 'success') 
-        ?> alert-dismissible fade show">
-            <?= $_SESSION['mensagem'] ?>
+    <?php if (isset($_SESSION['mensagem'])): 
+        $tipo = 'success';
+        $msg = $_SESSION['mensagem'];
+        if (strpos($msg, 'Erro') !== false || strpos($msg, 'não autorizado') !== false || strpos($msg, 'não encontrado') !== false) {
+            $tipo = 'danger';
+        } elseif (strpos($msg, 'CPF já') !== false) {
+            $tipo = 'warning';
+        }
+    ?>
+        <div class="alert alert-<?= $tipo ?> alert-dismissible fade show">
+            <?= htmlspecialchars($msg, ENT_QUOTES, 'UTF-8') ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         <?php unset($_SESSION['mensagem']); ?>
     <?php endif; ?>
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>📋 Painel de Agendamento</h2>
-        <a href="frequencia.php" class="btn btn-outline-primary">Frequência</a>
-        <a href="consultas.php" class="btn btn-outline-primary">Consultas</a>
-        <a href="cadastrar_medico.php" class="btn btn-outline-success">Médicos</a>
+        <h2>Painel de Agendamento</h2>
+        <div class="btn-group">
+            <a href="frequencia.php" class="btn btn-outline-primary">Frequência</a>
+            <a href="consultas.php" class="btn btn-outline-primary">Consultas</a>
+            <a href="cadastrar_medico.php" class="btn btn-outline-success">Médicos</a>
+        </div>
     </div>
 
     <div class="form-paciente mb-4">
@@ -174,18 +181,18 @@ $resultado = $stmt_sel->get_result();
                 <tbody>
                     <?php while ($p = $resultado->fetch_assoc()): ?>
                     <tr>
-                        <td><?= htmlspecialchars($p['CPF_paciente']) ?></td>
-                        <td><?= htmlspecialchars($p['nome_paciente']) ?></td>
-                        <td><?= htmlspecialchars($p['telefone_paciente']) ?></td>
-                        <td><?= htmlspecialchars($p['endereco_paciente']) ?></td>
+                        <td><?= htmlspecialchars($p['CPF_paciente'], ENT_QUOTES, 'UTF-8') ?></td>
+                        <td><?= htmlspecialchars($p['nome_paciente'], ENT_QUOTES, 'UTF-8') ?></td>
+                        <td><?= htmlspecialchars($p['telefone_paciente'], ENT_QUOTES, 'UTF-8') ?></td>
+                        <td><?= htmlspecialchars($p['endereco_paciente'], ENT_QUOTES, 'UTF-8') ?></td>
                         <td class="text-center">
                             <button type="button" class="btn btn-sm btn-outline-danger"
                                 data-bs-toggle="modal"
-                                data-bs-target="#modalRemover<?= htmlspecialchars($p['CPF_paciente']) ?>">
+                                data-bs-target="#modalRemover<?= htmlspecialchars($p['CPF_paciente'], ENT_QUOTES, 'UTF-8') ?>">
                                 🗑️ Remover
                             </button>
 
-                            <div class="modal fade" id="modalRemover<?= htmlspecialchars($p['CPF_paciente']) ?>" tabindex="-1">
+                            <div class="modal fade" id="modalRemover<?= htmlspecialchars($p['CPF_paciente'], ENT_QUOTES, 'UTF-8') ?>" tabindex="-1">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header bg-danger text-white">
@@ -195,8 +202,8 @@ $resultado = $stmt_sel->get_result();
                                         <div class="modal-body">
                                             <p>Tem certeza que deseja remover o paciente abaixo?</p>
                                             <ul class="list-unstyled bg-light p-3 rounded">
-                                                <li><strong>Nome:</strong> <?= htmlspecialchars($p['nome_paciente']) ?></li>
-                                                <li><strong>CPF:</strong> <?= htmlspecialchars($p['CPF_paciente']) ?></li>
+                                                <li><strong>Nome:</strong> <?= htmlspecialchars($p['nome_paciente'], ENT_QUOTES, 'UTF-8') ?></li>
+                                                <li><strong>CPF:</strong> <?= htmlspecialchars($p['CPF_paciente'], ENT_QUOTES, 'UTF-8') ?></li>
                                             </ul>
                                             <p class="text-danger fw-bold">
                                                 Esta ação é <u>irreversível</u> e removerá também todas as consultas associadas.
@@ -205,8 +212,8 @@ $resultado = $stmt_sel->get_result();
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                                             <form method="post" style="display:inline;">
-                                                <input type="hidden" name="remover_paciente" value="<?= htmlspecialchars($p['CPF_paciente']) ?>">
-                                                <input type="hidden" name="token" value="<?= $_SESSION['token'] ?>">
+                                                <input type="hidden" name="remover_paciente" value="<?= htmlspecialchars($p['CPF_paciente'], ENT_QUOTES, 'UTF-8') ?>">
+                                                <input type="hidden" name="token" value="<?= htmlspecialchars($_SESSION['token'], ENT_QUOTES, 'UTF-8') ?>">
                                                 <button type="submit" class="btn btn-danger">Remover</button>
                                             </form>
                                         </div>
@@ -220,10 +227,6 @@ $resultado = $stmt_sel->get_result();
             </table>
         </div>
     <?php endif; ?>
-
-    <form method="post" action="sair.php" class="mt-3">
-        <button type="submit" class="btn btn-secondary">🚪 Sair</button>
-    </form>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
