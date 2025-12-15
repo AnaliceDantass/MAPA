@@ -7,7 +7,7 @@ if (!isset($_SESSION['logado']) || $_SESSION['tipo'] !== 'Admin') {
     exit;
 }
 if (!isset($_SESSION['ID_usuario'])) {
-    die("<h3>❌ Sessão incompleta</h3><p>Faça login novamente. O sistema não recebeu seu ID.</p>");
+    die("<h3>Sessão incompleta</h3><p>Faça login novamente. O sistema não recebeu seu ID.</p>");
 }
 
 $stmt_pacientes = $conexao->prepare("
@@ -32,11 +32,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status = $_POST['status'] ?? 'Agendada';
 
     if (!$cpf_paciente || !$crm_medico || !$data) {
-        $_SESSION['mensagem'] = "❌ Paciente, médico e data são obrigatórios.";
+        $_SESSION['mensagem'] = "Paciente, médico e data são obrigatórios.";
     } else {
         $data_valida = DateTime::createFromFormat('Y-m-d', $data);
         if (!$data_valida || $data_valida->format('Y-m-d') !== $data) {
-            $_SESSION['mensagem'] = "❌ Data inválida. Use o calendário.";
+            $_SESSION['mensagem'] = "Data inválida. Use o calendário.";
         } else {
             $stmt = $conexao->prepare("
                 INSERT INTO consultas (CPF_cliente, CRM_medico, data_consulta, horario, status_consulta)
@@ -45,9 +45,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_param("sssss", $cpf_paciente, $crm_medico, $data, $horario, $status);
 
             if ($stmt->execute()) {
-                $_SESSION['mensagem'] = "✅ Consulta agendada com sucesso!";
+                $_SESSION['mensagem'] = "Consulta agendada com sucesso!";
             } else {
-                $_SESSION['mensagem'] = "❌ Erro ao agendar: " . htmlspecialchars($stmt->error);
+                $_SESSION['mensagem'] = "Erro ao agendar: " . htmlspecialchars($stmt->error);
             }
             $stmt->close();
         }
@@ -65,7 +65,7 @@ $stmt_consultas = $conexao->prepare("
         c.horario,
         c.status_consulta
     FROM consultas c
-    INNER JOIN paciente p ON c.CPF_cliente = p.CPF_paciente   -- ✅ CERTO!
+    INNER JOIN paciente p ON c.CPF_cliente = p.CPF_paciente   -- CERTO!
     INNER JOIN medico m ON c.CRM_medico = m.CRM_medico
     WHERE p.ID_usuario = ?
     ORDER BY c.data_consulta DESC, c.horario DESC
@@ -88,7 +88,7 @@ $result_consultas = $stmt_consultas->get_result();
 <body>
 <div class="container">
     <?php if (isset($_SESSION['mensagem'])): ?>
-        <div class="alert alert-<?= strpos($_SESSION['mensagem'], '❌') !== false ? 'danger' : 'success' ?> alert-dismissible fade show">
+        <div class="alert alert-<?= strpos($_SESSION['mensagem']) !== false ? 'danger' : 'success' ?> alert-dismissible fade show">
             <?= htmlspecialchars($_SESSION['mensagem']) ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -96,7 +96,7 @@ $result_consultas = $stmt_consultas->get_result();
     <?php endif; ?>
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>📅 Agendar Consulta</h2>
+        <h2>Agendar Consulta</h2>
         <a href="agendar.php" class="btn btn-outline-secondary">◀️ Voltar</a>
     </div>
 
@@ -150,7 +150,7 @@ $result_consultas = $stmt_consultas->get_result();
         </div>
     </div>
 
-    <h3 class="mb-3">📋 Consultas Agendadas</h3>
+    <h3 class="mb-3">Consultas Agendadas</h3>
     <?php if ($result_consultas->num_rows === 0): ?>
         <div class="alert alert-info">Nenhuma consulta cadastrada ainda.</div>
     <?php else: ?>
@@ -187,9 +187,6 @@ $result_consultas = $stmt_consultas->get_result();
         </div>
     <?php endif; ?>
 
-    <form method="post" action="sair.php" class="mt-3">
-        <button type="submit" class="btn btn-outline-secondary">🚪 Sair</button>
-    </form>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
