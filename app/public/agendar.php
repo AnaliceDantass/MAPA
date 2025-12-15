@@ -13,7 +13,7 @@ if (!isset($_SESSION['token'])) {
 
 if (isset($_POST['remover_paciente']) && isset($_POST['token'])) {
     if (!isset($_SESSION['token']) || $_POST['token'] !== $_SESSION['token']) {
-        $_SESSION['mensagem'] = "❌ Acesso não autorizado.";
+        $_SESSION['mensagem'] = "Acesso não autorizado.";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit;
     }
@@ -46,14 +46,14 @@ if (isset($_POST['remover_paciente']) && isset($_POST['token'])) {
         $stmt_del->execute();
         $stmt_del->close();
 
-        $msg = "✅ Paciente <strong>" . htmlspecialchars($paciente['nome_paciente']) . "</strong> removido";
+        $msg = "Paciente <strong>" . htmlspecialchars($paciente['nome_paciente']) . "</strong> removido";
         if ($consultas_removidas > 0) {
             $msg .= " e suas $consultas_removidas consulta(s)";
         }
         $msg .= " com sucesso!";
         $_SESSION['mensagem'] = $msg;
     } else {
-        $_SESSION['mensagem'] = "❌ Paciente não encontrado ou acesso negado.";
+        $_SESSION['mensagem'] = "Paciente não encontrado ou acesso negado.";
     }
 
     header("Location: " . $_SERVER['PHP_SELF']);
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['remover_paciente']))
     $cpf_clean = preg_replace('/\D/', '', $cpf);
 
     if (!$nome || !$telefone || !$endereco || strlen($cpf_clean) !== 11) {
-        $_SESSION['mensagem'] = "❌ Preencha todos os campos. CPF deve ter 11 dígitos (apenas números).";
+        $_SESSION['mensagem'] = "Preencha todos os campos. CPF deve ter 11 dígitos (apenas números).";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit;
     }
@@ -84,9 +84,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['remover_paciente']))
         $_SESSION['mensagem'] = "✅ Paciente cadastrado com sucesso!";
     } else {
         if ($stmt->errno == 1062 && strpos($stmt->error, 'CPF_paciente') !== false) {
-            $_SESSION['mensagem'] = "⚠️ CPF já cadastrado!";
+            $_SESSION['mensagem'] = "CPF já cadastrado!";
         } else {
-            $_SESSION['mensagem'] = "❌ Erro: " . htmlspecialchars($stmt->error);
+            $_SESSION['mensagem'] = "Erro: " . htmlspecialchars($stmt->error);
         }
     }
     $stmt->close();
@@ -117,8 +117,8 @@ $resultado = $stmt_sel->get_result();
 <div class="container">
     <?php if (isset($_SESSION['mensagem'])): ?>
         <div class="alert alert-<?= 
-            strpos($_SESSION['mensagem'], '❌') !== false ? 'danger' : 
-            (strpos($_SESSION['mensagem'], '⚠️') !== false ? 'warning' : 'success') 
+            strpos($_SESSION['mensagem']) !== false ? 'danger' : 
+            (strpos($_SESSION['mensagem']) !== false ? 'warning' : 'success') 
         ?> alert-dismissible fade show">
             <?= $_SESSION['mensagem'] ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -128,9 +128,9 @@ $resultado = $stmt_sel->get_result();
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>📋 Painel de Agendamento</h2>
-        <a href="frequencia.php" class="btn btn-outline-primary">📊 Frequência</a>
-        <a href="consultas.php" class="btn btn-outline-primary">📅 Consultas</a>
-        <a href="cadastrar_medico.php" class="btn btn-outline-success">🧑‍⚕️ Médicos</a>
+        <a href="frequencia.php" class="btn btn-outline-primary">Frequência</a>
+        <a href="consultas.php" class="btn btn-outline-primary">Consultas</a>
+        <a href="cadastrar_medico.php" class="btn btn-outline-success">Médicos</a>
     </div>
 
     <div class="form-paciente mb-4">
@@ -189,7 +189,7 @@ $resultado = $stmt_sel->get_result();
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header bg-danger text-white">
-                                            <h5 class="modal-title">⚠️ Confirmar Exclusão</h5>
+                                            <h5 class="modal-title">Confirmar Exclusão</h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                         </div>
                                         <div class="modal-body">
@@ -199,7 +199,7 @@ $resultado = $stmt_sel->get_result();
                                                 <li><strong>CPF:</strong> <?= htmlspecialchars($p['CPF_paciente']) ?></li>
                                             </ul>
                                             <p class="text-danger fw-bold">
-                                                ⚠️ Esta ação é <u>irreversível</u> e removerá também todas as consultas associadas.
+                                                Esta ação é <u>irreversível</u> e removerá também todas as consultas associadas.
                                             </p>
                                         </div>
                                         <div class="modal-footer">
