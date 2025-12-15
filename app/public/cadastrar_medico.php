@@ -17,25 +17,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param("sss", $nome, $crm, $especialidade); 
 
         if ($stmt->execute()) {
-            $_SESSION['mensagem'] = "✅ Médico cadastrado com sucesso!";
+            $_SESSION['mensagem'] = "Médico cadastrado com sucesso!";
         } else {
             if ($stmt->errno == 1062 && strpos($stmt->error, 'CRM_medico') !== false) {
-                $_SESSION['mensagem'] = "⚠️ CRM já cadastrado!";
+                $_SESSION['mensagem'] = "CRM já cadastrado!";
             } else {
-                $_SESSION['mensagem'] = "❌ Erro: " . htmlspecialchars($stmt->error);
+                $_SESSION['mensagem'] = "Erro: " . htmlspecialchars($stmt->error);
             }
         }
         $stmt->close();
         header("Location: " . $_SERVER['PHP_SELF']);
         exit;
     } else {
-        $_SESSION['mensagem'] = "❌ Nome e CRM são obrigatórios.";
+        $_SESSION['mensagem'] = "Nome e CRM são obrigatórios.";
     }
 }
 
 if (isset($_POST['remover_medico']) && isset($_POST['token'])) {
     if (!isset($_SESSION['token']) || $_POST['token'] !== $_SESSION['token']) {
-        $_SESSION['mensagem'] = "❌ Acesso não autorizado.";
+        $_SESSION['mensagem'] = "Acesso não autorizado.";
         header("Location: " . $_SERVER['PHP_SELF']);
         exit;
     }
@@ -52,13 +52,13 @@ if (isset($_POST['remover_medico']) && isset($_POST['token'])) {
         $stmt->bind_param("i", $id_medico);
         
         if ($stmt->execute()) {
-            $_SESSION['mensagem'] = "✅ Médico " . htmlspecialchars($medico['nome_medico']) . " removido com sucesso!";
+            $_SESSION['mensagem'] = "Médico " . htmlspecialchars($medico['nome_medico']) . " removido com sucesso!";
         } else {
-            $_SESSION['mensagem'] = "❌ Erro ao remover médico: " . htmlspecialchars($stmt->error);
+            $_SESSION['mensagem'] = "Erro ao remover médico: " . htmlspecialchars($stmt->error);
         }
         $stmt->close();
     } else {
-        $_SESSION['mensagem'] = "❌ Médico não encontrado.";
+        $_SESSION['mensagem'] = "Médico não encontrado.";
     }
 
     header("Location: " . $_SERVER['PHP_SELF']);
@@ -84,7 +84,7 @@ $resultado = $conexao->query("SELECT * FROM medico ORDER BY nome_medico");
 <body>
 <div class="container">
     <?php if (isset($_SESSION['mensagem'])): ?>
-        <div class="alert alert-<?= strpos($_SESSION['mensagem'], '❌') !== false ? 'danger' : (strpos($_SESSION['mensagem'], '⚠️') !== false ? 'warning' : 'success') ?> alert-dismissible fade show">
+        <div class="alert alert-<?= strpos($_SESSION['mensagem']) !== false ? 'danger' : (strpos($_SESSION['mensagem'], '⚠️') !== false ? 'warning' : 'success') ?> alert-dismissible fade show">
             <?= htmlspecialchars($_SESSION['mensagem']) ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -92,7 +92,7 @@ $resultado = $conexao->query("SELECT * FROM medico ORDER BY nome_medico");
     <?php endif; ?>
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>👨‍⚕️ Cadastrar Médico</h2>
+        <h2>Cadastrar Médico</h2>
         <a href="agendar.php" class="btn btn-outline-secondary">◀️ Voltar</a>
     </div>
 
@@ -117,7 +117,7 @@ $resultado = $conexao->query("SELECT * FROM medico ORDER BY nome_medico");
         </div>
     </div>
 
-<h3 class="mb-3">📋 Médicos Cadastrados</h3>
+<h3 class="mb-3">Médicos Cadastrados</h3>
 <?php if ($resultado->num_rows === 0): ?>
     <div class="alert alert-info">Nenhum médico cadastrado ainda.</div>
 <?php else: ?>
@@ -148,7 +148,7 @@ $resultado = $conexao->query("SELECT * FROM medico ORDER BY nome_medico");
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header bg-danger text-white">
-                                            <h5 class="modal-title">⚠️ Confirmar Exclusão</h5>
+                                            <h5 class="modal-title">Confirmar Exclusão</h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                         </div>
                                         <div class="modal-body">
@@ -158,7 +158,7 @@ $resultado = $conexao->query("SELECT * FROM medico ORDER BY nome_medico");
                                                 <li><strong>CRM:</strong> <?= htmlspecialchars($m['CRM_medico']) ?></li>
                                             </ul>
                                             <p class="text-danger fw-bold">
-                                                ⚠️ Esta ação é <u>irreversível</u>.
+                                                Esta ação é <u>irreversível</u>.
                                             </p>
                                         </div>
                                         <div class="modal-footer">
