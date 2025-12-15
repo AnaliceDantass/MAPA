@@ -12,7 +12,9 @@ $sql = "
         p.ID_paciente,
         p.nome_paciente,
         COUNT(c.ID_consulta) AS total_sessoes,
-        SUM(CASE WHEN c.status_consulta = 'Realizada' THEN 1 ELSE 0 END) AS sessoes_realizadas,
+        SUM(CASE WHEN c.status_consulta = 'Realizada' THEN 1 ELSE 0 END) AS realizadas,
+        SUM(CASE WHEN c.status_consulta = 'Ausente' THEN 1 ELSE 0 END) AS ausentes,
+        SUM(CASE WHEN c.status_consulta = 'Agendada' THEN 1 ELSE 0 END) AS agendadas,
         MIN(CASE WHEN c.status_consulta = 'Agendada' THEN c.data_consulta END) AS proxima_sessao
     FROM paciente p
     LEFT JOIN consultas c ON p.CPF_paciente = c.CPF_cliente
@@ -35,53 +37,118 @@ $result = $stmt->get_result();
     <title>Frequência dos Pacientes</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { padding: 20px; background-color: #f8f9fa; }
-        .card-header { font-weight: bold; }
-        .progress { height: 8px; }
-        .progress-bar { font-size: 0.75rem; }
-        .text-realizada { color: #198754; font-weight: bold; }
-        .text-agendada { color: #ffc107; font-weight: bold; }
-        .text-pendente { color: #6c757d; }
+        body { 
+            padding: 20px; 
+            background-color: #f8f9fa; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card-header {
+            font-weight: bold;
+        }
+        .progress {
+            height: 8px;
+            margin-top: 4px;
+            margin-bottom: 8px;
+        }
+        .status-badge {
+            padding: 0.35em 0.6em;
+            border-radius: 0.25rem;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        .badge-realizada { background-color: #198754; color: white; }
+        .badge-ausente { background-color: #dc3545; color: white; }
+        .badge-agendada { background-color: #ffc107; color: #212529; }
+        .badge-total { background-color: #6c757d; color: white; }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            margin-right: 6px;
+        }
+        .info-icon {
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Frequência dos Pacientes</h2>
+        <div>
+            <h2>Frequência dos Pacientes</h2>
+            <p class="text-muted mb-0">
+                <small>
+                     Pacientes com sessões marcadas | 
+                     Atualize o status em <a href="consultas.php">Consultas</a>
+                </small>
+            </p>
+        </div>
         <a href="agendar.php" class="btn btn-outline-secondary">◀️ Voltar</a>
+    </div>
+
+    <!-- Legenda -->
+    <div class="d-flex flex-wrap mb-3 p-2 bg-light rounded">
+        <div class="legend-item">
+            <span class="legend-color bg-success"></span>
+            <span>Realizada</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-color bg-danger"></span>
+            <span>Ausente</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-color" style="background-color: #ffc107;"></span>
+            <span>Agendada</span>
+        </div>
+        <div class="legend-item">
+            <span class="legend-color bg-secondary"></span>
+            <span>Total</span>
+        </div>
     </div>
 
     <?php if ($result->num_rows === 0): ?>
         <div class="alert alert-info">
-            Nenhum paciente com sessões cadastradas ainda.<br>
-            <small>Agende consultas em <a href="consultas.php">Consultas</a> para ver a frequência aqui.</small>
+            <h5>Nenhum paciente com sessões registradas.</h5>
+            <p>
+                Agende consultas em <a href="consultas.php">Consultas</a> para acompanhar a frequência aqui.<br>
+                <small class="text-muted">Pacientes sem consultas não aparecem nesta lista.</small>
+            </p>
         </div>
     <?php else: ?>
         <div class="row g-3">
             <?php while ($p = $result->fetch_assoc()): 
                 $total = (int)$p['total_sessoes'];
-                $realizadas = (int)$p['sessoes_realizadas'];
-                $faltam = max(0, $total - $realizadas);
+                $realizadas = (int)$p['realizadas'];
+                $ausentes = (int)$p['ausentes'];
+                $agendadas = (int)$p['agendadas'];
                 $progresso = $total > 0 ? round(($realizadas / $total) * 100) : 0;
             ?>
                 <div class="col-md-6 col-lg-4">
                     <div class="card shadow-sm h-100">
-                        <div class="card-header bg-primary text-white">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                             <?= htmlspecialchars($p['nome_paciente']) ?>
+                            <span class="badge bg-light text-dark"><?= $total ?> sessões</span>
                         </div>
                         <div class="card-body">
-                            <p class="mb-1">
-                                <span class="text-realizada">Realizadas:</span> <strong><?= $realizadas ?></strong>
-                            </p>
-                            <p class="mb-1">
-                                <span class="text-agendada">Agendadas:</span> <strong><?= $faltam ?></strong>
-                            </p>
-                            <p class="mb-2">
-                                <span class="fw-bold">Total:</span> <strong><?= $total ?></strong> sessões
-                            </p>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="status-badge badge-realizada"><?= $realizadas ?> Realizada<?= $realizadas !== 1 ? 's' : '' ?></span>
+                                <span class="status-badge badge-ausente"><?= $ausentes ?> Ausente<?= $ausentes !== 1 ? 's' : '' ?></span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span class="status-badge badge-agendada"><?= $agendadas ?> Agendada<?= $agendadas !== 1 ? 's' : '' ?></span>
+                                <?php if ($total > 0): ?>
+                                    <span class="status-badge badge-total"><?= $progresso ?>%</span>
+                                <?php endif; ?>
+                            </div>
 
                             <?php if ($total > 0): ?>
-                                <div class="progress mb-2">
+                                <div class="progress">
                                     <div class="progress-bar bg-success" style="width: <?= $progresso ?>%">
                                         <?= $progresso ?>%
                                     </div>
@@ -89,12 +156,15 @@ $result = $stmt->get_result();
                             <?php endif; ?>
 
                             <?php if ($p['proxima_sessao']): ?>
-                                <p class="mb-0">
-                                    <span class="text-agendada">Próxima:</span> 
+                                <div class="mt-3 small">
+                                    <span class="text-warning">Próxima sessão:</span><br>
                                     <strong><?= date('d/m/Y', strtotime($p['proxima_sessao'])) ?></strong>
-                                </p>
-                            <?php else: ?>
-                                <p class="mb-0 text-pendente">Sem sessões agendadas</p>
+                                </div>
+                            <?php elseif ($agendadas === 0 && $total > 0): ?>
+                                <div class="mt-3 small text-muted">
+                                    ⏳ Sem sessões agendadas<br>
+                                    <small>Agende em <a href="consultas.php">Consultas</a></small>
+                                </div>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -102,16 +172,6 @@ $result = $stmt->get_result();
             <?php endwhile; ?>
         </div>
     <?php endif; ?>
-
-    <div class="mt-4 p-3 bg-light rounded">
-        <h5>Como funciona?</h5>
-        <ul>
-            <li>A frequência é calculada com base nas <strong>consultas</strong> do paciente.</li>
-            <li>Mude o status da consulta para <strong>Realizada</strong> em <a href="consultas.php">Consultas</a> para atualizar aqui.</li>
-            <li>Não é necessário cadastrar "frequência" manualmente.</li>
-        </ul>
-    </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
