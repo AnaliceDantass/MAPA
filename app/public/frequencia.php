@@ -32,7 +32,7 @@ $result = $stmt->get_result();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 Frequência dos Pacientes</title>
+    <title>Frequência dos Pacientes</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { padding: 20px; background-color: #f8f9fa; }
@@ -90,11 +90,11 @@ $result = $stmt->get_result();
 
                             <?php if ($p['proxima_sessao']): ?>
                                 <p class="mb-0">
-                                    <span class="text-agendada">➡️ Próxima:</span> 
+                                    <span class="text-agendada">Próxima:</span> 
                                     <strong><?= date('d/m/Y', strtotime($p['proxima_sessao'])) ?></strong>
                                 </p>
                             <?php else: ?>
-                                <p class="mb-0 text-pendente">➡️ Sem sessões agendadas</p>
+                                <p class="mb-0 text-pendente">Sem sessões agendadas</p>
                             <?php endif; ?>
                         </div>
                     </div>
