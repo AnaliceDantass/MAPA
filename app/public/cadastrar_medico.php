@@ -171,7 +171,7 @@ $resultado = $conexao->query("SELECT * FROM medico ORDER BY nome_medico");
                                                     <li><strong>CRM:</strong> <?= htmlspecialchars($m['CRM_medico'], ENT_QUOTES, 'UTF-8') ?></li>
                                                 </ul>
                                                 <p class="text-danger fw-bold">
-                                                    Esta ação é <u>irreversível</u>.
+                                                    Esta ação é irreversível.
                                                 </p>
                                             </div>
                                             <div class="modal-footer">
