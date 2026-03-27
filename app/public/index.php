@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['logado'] = 'logado';
             $_SESSION['usuario'] = $usuario['nome_usuario'];
             $_SESSION['tipo'] = $usuario['tipo_usuario']; 
-            $_SESSION['ID_usuario'] = $usuario['ID_usuario']; // ⭐ AQUI — ESSENCIAL
+            $_SESSION['ID_usuario'] = $usuario['ID_usuario']; 
             header('Location: agendar.php');
             exit;
         } else {
